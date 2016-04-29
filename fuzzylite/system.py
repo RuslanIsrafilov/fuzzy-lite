@@ -1,4 +1,5 @@
 import numpy as np
+from collections import defaultdict
 from . import primitives as prim
 
 class Term(object):
@@ -35,6 +36,9 @@ class FuzzyVariable(object):
         t.variable = self
         self._terms[name] = t
 
+    def terms(self):
+        return self._terms
+
 
 class Rule(object):
     def __init__(self, antecedents, consequent):
@@ -42,7 +46,9 @@ class Rule(object):
         self.consequent = consequent
 
     def antecedent_term_by_var_name(self, name):
-        return self.antecedents_dict[name]
+        if name in self.antecedents_dict:
+            return self.antecedents_dict[name]
+        return None
 
     def _init_terms_dict(self, terms):
         kv = { }
@@ -71,6 +77,26 @@ class OperatorFactory(object):
         return switch[name]
 
 
+class FuzzySystemStages(object):
+    def __init__(self):
+        self.fuzzification = []
+        self.agregation    = []
+        self.activation    = []
+        self.accumulation  = {}
+
+    def push_fuzzification_stage(self, fuzzyvalues, varnames):
+        self.fuzzification.append(dict(zip(varnames, fuzzyvalues)))
+
+    def push_agregation_stage(self, value):
+        self.agregation.append(value)    
+
+    def push_activation_stage(self, values):
+        self.activation.append(values)
+
+    def push_accumulation_stage(self, varname, values):
+        self.accumulation[varname] = values
+
+
 class FuzzySystem(object):
     def __init__(self, rules, agg='min', act='min', acc='max', deffuz='centroid'):
         self.rules = rules
@@ -80,42 +106,61 @@ class FuzzySystem(object):
         self.activation_operator = act
         self.accumulation_operator = acc
         self.deffuzification_operator = deffuz
+        self.stages = None
 
-    def produce(self):
+    def produce(self, save_stages=False):
         if self.input == None:
             raise(Exception('Input of the system is None')) 
         
+        self.stages = FuzzySystemStages()
         agregation_operator = OperatorFactory(self.agregation_operator).operator()
         activation_operator = OperatorFactory(self.activation_operator).operator()
         accumulation_operator = OperatorFactory(self.accumulation_operator).operator()
         deffuzification_operator = OperatorFactory(self.deffuzification_operator).operator()
 
-        accumulationInputs = { }
-        consequentDict = { }
+        accumulationInputs = defaultdict(list)
+        consequentVariableUniverses = {}
+
         for rule in self.rules:
-            fuzzyvalues = self._fuzzification(rule, self.input)
+            # fuzzification
+            fuzzyvalues, varnames = self._fuzzification(rule, self.input)
+            if save_stages:
+                self.stages.push_fuzzification_stage(fuzzyvalues, varnames)
+
+            # agregation
             agregated = self._agregation(agregation_operator, fuzzyvalues)
+            if save_stages:
+                self.stages.push_agregation_stage(agregated)
+
+            # activation
             activated = self._activation(activation_operator, rule.consequent, agregated)
+            if save_stages:
+                self.stages.push_activation_stage(activated)
+
             var = rule.consequent.varname()
-            if var not in accumulationInputs:
-                accumulationInputs[var] = []
             accumulationInputs[var].append(activated)
-            consequentDict[var] = rule.consequent
+            consequentVariableUniverses[var] = rule.consequent.varuniverse()
         
-        output = { }
+        output = {}
         for key, activated in accumulationInputs.items():
             accumulated = self._accumulation(accumulation_operator, activated)
-            output[key] = self._deffuzification(deffuzification_operator, 
-                                                consequentDict[key], accumulated)
+            if save_stages:
+                self.stages.push_accumulation_stage(key, accumulated)
+
+            varuniverse = consequentVariableUniverses[key]
+            output[key] = self._deffuzification(deffuzification_operator, varuniverse, accumulated)
         self.output = output
 
     def _fuzzification(self, rule, valuesdict):
         result = []
+        varnames = []
         for key, value in valuesdict.items():
             t = rule.antecedent_term_by_var_name(key)
-            memvalue = t.membership_value(value)
-            result.append(memvalue)
-        return result
+            if not t == None: 
+                memvalue = t.membership_value(value)
+                result.append(memvalue)
+                varnames.append(key)
+        return (np.array(result), varnames)
 
     def _agregation(self, operator, valueslist):
         current = valueslist[0]
@@ -139,6 +184,6 @@ class FuzzySystem(object):
             result[j] = r
         return result
 
-    def _deffuzification(self, operator, term, accumulated):
-        return operator(term.varuniverse(), accumulated)
+    def _deffuzification(self, operator, universe, accumulated):
+        return operator(universe, accumulated)
 

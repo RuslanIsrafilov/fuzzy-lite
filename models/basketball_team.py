@@ -63,10 +63,14 @@ def main():
 
     # Set input values to the system and run
     system.input = { 'height': 190, 'skill': 54 }
-    system.produce()
+    system.produce(save_stages=True)
     
     # Get system output and print result
     output = system.output
+    print(system.stages.fuzzification)
+    print(system.stages.agregation)
+    # print(system.stages.activation)
+    print(system.stages.accumulation)
     print('confidence = ', output['confidence'])
 
 if __name__ == '__main__':
