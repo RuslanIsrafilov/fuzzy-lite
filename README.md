@@ -26,10 +26,6 @@ tip['low']    = fuzzy.trimf(tip.universe, [0,   0, 13])
 tip['medium'] = fuzzy.trimf(tip.universe, [0,  13, 25])
 tip['high']   = fuzzy.trimf(tip.universe, [13, 25, 25])
 
-rule1 = fuzz.Rule(quality['poor'] | service['poor'], tip['low'])
-rule2 = fuzz.Rule(service['average'], tip['medium'])
-rule3 = fuzz.Rule(service['good'] | quality['good'], tip['high'])
-
 rules = [
   fuzzy.Rule([quality['poor'], service['poor']], tip['low']),
   fuzzy.Rule([service['average']], tip['medium']),
