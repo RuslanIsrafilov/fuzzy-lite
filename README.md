@@ -17,9 +17,9 @@ quality['average'] = fuzzy.trimf(quality.universe, [0,  5, 10])
 quality['good']    = fuzzy.trimf(quality.universe, [5, 10, 10])
 
 service = fuzzy.FuzzyVariable(np.arange(0, 10 + 1, 1), 'service')
-quality['poor']    = fuzzy.trimf(quality.universe, [0,  0,  5])
-quality['average'] = fuzzy.trimf(quality.universe, [0,  5, 10])
-quality['good']    = fuzzy.trimf(quality.universe, [5, 10, 10])
+service['poor']    = fuzzy.trimf(quality.universe, [0,  0,  5])
+service['average'] = fuzzy.trimf(quality.universe, [0,  5, 10])
+service['good']    = fuzzy.trimf(quality.universe, [5, 10, 10])
 
 tip = fuzzy.FuzzyVariable(np.arange(0, 25 + 1, 1), 'tip')
 tip['low']    = fuzzy.trimf(tip.universe, [0,   0, 13])
