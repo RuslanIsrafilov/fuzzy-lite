@@ -72,7 +72,12 @@ class OperatorFactory(object):
             'min': prim.operator_min,
             'max': prim.operator_max,
             'prod': prim.operator_prod,
-            'centroid': prim.operator_centroid
+            'sum': prim.operator_sum,
+            't_lukas': prim.operator_lukas_t_norm,
+            's_lukas': prim.operator_lukas_s_norm,
+            'act_lukas': prim.operator_lukas_act,
+            'centroid': prim.operator_centroid,
+            'mom': prim.operator_mom
         }
         return switch[name]
 
@@ -168,11 +173,11 @@ class FuzzySystem(object):
             current = operator(current, valueslist[i])
         return current
 
-    def _activation(self, operator, term, truthDegree):
+    def _activation(self, operator, term, truthdegree):
         xmf = term.xmf
         result = np.zeros((len(xmf)))
         for i in range(0, len(result)):
-            result[i] = operator(xmf[i], truthDegree)
+            result[i] = operator(truthdegree, xmf[i])
         return result
 
     def _accumulation(self, operator, arrayslist):

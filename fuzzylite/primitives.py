@@ -59,10 +59,28 @@ def operator_min(x, y):
 def operator_max(x, y):
     return max(x, y)
 
+def operator_lukas_t_norm(x, y):
+    return max(x + y - 1, 0)
+
+def operator_lukas_s_norm(x, y):
+    return min(x + y, 1)
+
+def operator_lukas_act(x, y):
+    return min(1, 1 - x + y)
+
 def operator_prod(x, y):
     return x * y
+
+def operator_sum(x, y):
+    return x + y - x * y
 
 def operator_centroid(universe, xmf):
     sum1 = np.sum(np.array(universe) * np.array(xmf))
     sum2 = np.sum(np.array(xmf))
     return sum1 / sum2
+
+def operator_mom(universe, xmf):
+    m = np.max(xmf)
+    indices = np.where(xmf == m)[0]
+    unmax = np.array(universe)[indices]
+    return np.sum(unmax) / len(indices)
