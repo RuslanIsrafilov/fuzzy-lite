@@ -6,7 +6,7 @@ import numpy as np
 import fuzzylite as fuzzy
 from fuzzylite import FuzzyVariable, FuzzySystem, Rule
 
-def main():
+def construct_system():
     # Define linguistic variable 'height' on universe [170, 236] and its terms
     height = FuzzyVariable(np.arange(170, 236 + 1, 1), 'height')
     height['very_tall'] = fuzzy.trapmf(height.universe, [217, 222, 236, 236])
@@ -60,18 +60,28 @@ def main():
     # Construct system using the set of rules and chose system's operators
     system = FuzzySystem(rules)
     system.agregation_operator = 'min'
+    system.deffuzification_operator = 'mom'
+
+    return system
+
+
+def main():
+    # Construct fuzzy production system
+    system = construct_system()
 
     # Set input values to the system and run
     system.input = { 'height': 190, 'skill': 54 }
     system.produce(save_stages=True)
     
-    # Get system output and print result
-    output = system.output
-    print(system.stages.fuzzification)
-    print(system.stages.agregation)
+    # Print intermediate system stages
+    # print(system.stages.fuzzification)
+    # print(system.stages.agregation)
     # print(system.stages.activation)
-    print(system.stages.accumulation)
-    print('confidence = ', output['confidence'])
+    # print(system.stages.accumulation)
+
+    # Get system output and print result
+    print('confidence = ', system.output['confidence'])
+
 
 if __name__ == '__main__':
     main()
